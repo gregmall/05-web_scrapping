@@ -1,13 +1,13 @@
-const request = require('../lib/request');
-const parser = require('../lib/parser');
+const fs = require('fs');
+const pool = require('../lib/utils/pool');
+const store = require('../lib/store');
 
-describe('parser function', () => {
-  it('returns an array of all book title, cover image, ratings, price and availability', async() => {
-    const document = await request();
-
-    const bookInfo = parser(document);
-    
-    expect(bookInfo).toEqual(expect.arrayContaining([
+describe('store function', () => {
+  beforeEach(() => {
+    return pool.query(fs.readFileSync('./sql/setup.sql', 'utf-8'));
+  });
+  it('takes an array of books and saves them in the database', async() => {
+    const books = [
       {
         image: 'media/cache/2c/da/2cdad67c44b002e7ead0cc35693c0e8b.jpg',
         rating: 'Three',
@@ -30,8 +30,11 @@ describe('parser function', () => {
         available: true
       }
 
-    ]));
+    ];
+    await store(books);
+    const { rows } = await pool.query('SELECT * FROM books');
 
-        
+    expect(rows).toHaveLength(3);
   });
+
 });
